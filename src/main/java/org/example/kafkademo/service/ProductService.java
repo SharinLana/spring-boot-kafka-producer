@@ -1,9 +1,10 @@
 package org.example.kafkademo.service;
 
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.example.kafkademo.events.ProductCreatedEvent;
 import org.example.kafkademo.service.interfaces.ProductServiceInterface;
 import org.example.kafkademo.dto.CreateProductDto;
+import org.example.kafkademocore.ProductCreatedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -45,6 +46,18 @@ public class ProductService implements ProductServiceInterface {
         // for a KafkaProducer that has such features as dependency injection
         // and automatic configuration (see above, line 13 - 19)
 
+        // Generate a record with the unique ids (one - for the record
+        // itself, another - for the message/event)
+        ProducerRecord<String, ProductCreatedEvent> record =
+                new ProducerRecord<>("product-created-events-topic",// taken from
+                                     // KafkaConfig
+                                     productId, productCreateEvent);
+        record.headers().add("messageId",
+                             UUID.randomUUID().toString().getBytes()); //
+        // generated an id for the message and stored
+        // it into headers to prevent storing duplicate
+        // messages into the database in the Consumer microservice
+
         // KafkaTemplate provides us with a number of send() methods that can
         // be used to send messages to Kafka topic:
         // + Get a confirmation that product event successfully persist in
@@ -52,9 +65,7 @@ public class ProductService implements ProductServiceInterface {
         // getting a notification about completion the operation thanks to
         // the CompletableFuture Java class)
         CompletableFuture<SendResult<String, ProductCreatedEvent>> future =
-                kafkaTemplate.send("product-created-events-topic",// taken from
-                                   // KafkaConfig
-                                   productId, productCreateEvent);
+                kafkaTemplate.send(record);
 
         // 4. to handle the result when the operation completes, we can use a
         // whenComplete() method:
