@@ -126,7 +126,7 @@ public class ProductsServiceIntegrationTest {
         // check id this message matches the message I just sent.
 
         // 1. Config a kafka consumer as a private method (see below)
-        // 2.
+        // 2.Get the message from the records queue
         ConsumerRecord<String, ProductCreatedEvent> message =
                 records.poll(3000, TimeUnit.MILLISECONDS); // waits up to 3
         // seconds for a message, return it if arrives, if not - return null
